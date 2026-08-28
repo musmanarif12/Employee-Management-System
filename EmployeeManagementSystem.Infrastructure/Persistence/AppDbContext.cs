@@ -1,10 +1,11 @@
-﻿using EmployeeManagementSystem.Domain.Entities;
+﻿using EmployeeManagementSystem.Application.Common.Interfaces;
+using EmployeeManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace EmployeeManagementSystem.Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : DbContext,IAppDbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
