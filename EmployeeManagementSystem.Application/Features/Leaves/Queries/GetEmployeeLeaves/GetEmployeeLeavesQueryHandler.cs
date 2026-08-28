@@ -9,6 +9,7 @@ namespace EmployeeManagementSystem.Application.Features.Leaves.Queries.GetEmploy
 public class GetEmployeeLeavesQueryHandler : IRequestHandler<GetEmployeeLeavesQuery, List<LeaveResponseDto>>
 {
     private readonly IAppDbContext _context;
+    private const int MaxLeaveQuota = 5;
 
     public GetEmployeeLeavesQueryHandler(IAppDbContext context)
     {
@@ -22,13 +23,19 @@ public class GetEmployeeLeavesQueryHandler : IRequestHandler<GetEmployeeLeavesQu
             .OrderByDescending(l => l.AppliedOn)
             .ToListAsync(cancellationToken);
 
+        int usedQuota = leaves.Count(l => l.Status == LeaveStatus.Approved || l.Status == LeaveStatus.Pending);
+        int remainingQuota = Math.Max(0, MaxLeaveQuota - usedQuota);
+
         return leaves.Select(l => new LeaveResponseDto(
             l.Id,
             l.LeaveDate,
             l.Reason,
             l.Status.ToString(),
             l.ManagerComment,
-            GetNotificationMessage(l.Status, l.ManagerComment)
+            GetNotificationMessage(l.Status, l.ManagerComment),
+            MaxLeaveQuota,
+            usedQuota,
+            remainingQuota
         )).ToList();
     }
 

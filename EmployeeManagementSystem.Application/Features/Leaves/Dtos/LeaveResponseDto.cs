@@ -6,5 +6,8 @@ public record LeaveResponseDto(
     string Reason,
     string Status,
     string? ManagerComment,
-    string NotificationMessage
+    string NotificationMessage,
+    int TotalQuota,
+    int UsedQuota,
+    int RemainingQuota
 );

@@ -9,7 +9,7 @@ namespace EmployeeManagementSystem.Application.Features.Leaves.Commands.ApplyLea
 public class ApplyLeaveCommandHandler : IRequestHandler<ApplyLeaveCommand, string>
 {
     private readonly IAppDbContext _context;
-
+    private const int MaxLeaveQuota = 5; 
     public ApplyLeaveCommandHandler(IAppDbContext context)
     {
         _context = context;
@@ -21,7 +21,20 @@ public class ApplyLeaveCommandHandler : IRequestHandler<ApplyLeaveCommand, strin
             .FirstOrDefaultAsync(u => u.Id == request.EmployeeId, cancellationToken);
 
         if (employee == null)
+        {
             throw new Exception("Employee not found.");
+        }
+
+        int usedLeaveCount = await _context.LeaveRequests
+            .CountAsync(l => l.EmployeeId == request.EmployeeId &&
+                             (l.Status == LeaveStatus.Approved || l.Status == LeaveStatus.Pending),
+                        cancellationToken);
+
+        if (usedLeaveCount >= MaxLeaveQuota)
+        {
+            //throw new Exception($"Leave quota full! You have already used/applied for all {MaxLeaveQuota} allowable leaves.");
+            return $"Leave Application Declined: You have reached your maximum limit of {MaxLeaveQuota} leaves. Please contact HR or your manager for further assistance.";
+        }
 
         var leave = new LeaveRequest
         {
@@ -34,6 +47,7 @@ public class ApplyLeaveCommandHandler : IRequestHandler<ApplyLeaveCommand, strin
         _context.LeaveRequests.Add(leave);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return "Leave request submitted successfully. Waiting for Manager approval.";
+        int remainingQuota = MaxLeaveQuota - (usedLeaveCount + 1);
+        return $"Leave request submitted successfully. Remaining quota: {remainingQuota}/{MaxLeaveQuota}. Waiting for Manager approval.";
     }
 }
