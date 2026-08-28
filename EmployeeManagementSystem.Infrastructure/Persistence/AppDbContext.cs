@@ -13,7 +13,7 @@ namespace EmployeeManagementSystem.Infrastructure.Persistence
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-
+        public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

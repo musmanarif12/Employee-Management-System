@@ -1,8 +1,11 @@
-﻿using System.Text;
-using EmployeeManagementSystem.Application.Common.Interfaces;
+﻿using EmployeeManagementSystem.Application.Common.Interfaces;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Login;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Register;
 using EmployeeManagementSystem.Application.Features.Auth.Dtos;
+using EmployeeManagementSystem.Application.Features.Leaves.Commands.ApplyLeave;
+using EmployeeManagementSystem.Application.Features.Leaves.Commands.ReviewLeave;
+using EmployeeManagementSystem.Application.Features.Leaves.Dtos;
+using EmployeeManagementSystem.Application.Features.Leaves.Queries.GetEmployeeLeaves;
 using EmployeeManagementSystem.Infrastructure.Persistence;
 using EmployeeManagementSystem.Infrastructure.Security;
 using FluentValidation;
@@ -11,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +43,15 @@ builder.Services.AddTransient<IValidator<RegisterCommand>, RegisterCommandValida
 // Login Feature
 builder.Services.AddTransient<IRequestHandler<LoginCommand, AuthResponseDto>, LoginCommandHandler>();
 builder.Services.AddTransient<IValidator<LoginCommand>, LoginCommandValidator>();
+// Apply Leave
+builder.Services.AddTransient<IRequestHandler<ApplyLeaveCommand, string>, ApplyLeaveCommandHandler>();
+builder.Services.AddTransient<IValidator<ApplyLeaveCommand>, ApplyLeaveCommandValidator>();
 
+// Review Leave (Manager Action)
+builder.Services.AddTransient<IRequestHandler<ReviewLeaveCommand, string>, ReviewLeaveCommandHandler>();
+
+// Get Leaves (Employee Status View)
+builder.Services.AddTransient<IRequestHandler<GetEmployeeLeavesQuery, List<LeaveResponseDto>>, GetEmployeeLeavesQueryHandler>();
 // 6. Safe Configuration for JWT Authentication
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettingsSection["Secret"] ?? "SUPER_SECRET_KEY_THAT_IS_AT_LEAST_32_BYTES_LONG_12345!";
