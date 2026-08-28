@@ -25,7 +25,7 @@ namespace EmployeeManagementSystem.Application.Features.Auth.Commands.Register
                 .AnyAsync(u => u.Email == request.Email, cancellationToken);
             if (emailExist)
                 throw new Exception("Email is already Registered.");
-            var role = await _context.Users
+            var role = await _context.Roles
                 .FirstOrDefaultAsync(r => r.Id == request.RoleId, cancellationToken);
             if (role == null)
                 throw new Exception("Invalid Role Selected.");
@@ -44,13 +44,13 @@ namespace EmployeeManagementSystem.Application.Features.Auth.Commands.Register
             _context.Users.Add(user);
             await _context.SaveChangesAsync(cancellationToken);
 
-            var token = _jwtTokenGenerator.GenerateToken(user, role.FullName);
+            var token = _jwtTokenGenerator.GenerateToken(user, role.Name);
 
             return new AuthResponseDto(
                 user.Id,
                 user.FullName,
                 user.Email,
-                role.FullName,
+                role.Name,
                 token
             );
         }
