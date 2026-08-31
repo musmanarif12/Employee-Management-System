@@ -1,57 +1,101 @@
-Employee Management System API
+# Employee Management System (.NET 9 - Clean Architecture)
 
-Project Overview
-This project is a secure Employee Management System built using .NET 9, Clean Architecture, CQRS pattern with MediatR, FluentValidation, and EF Core 9 with SQL Server.
+A secure, scalable, and enterprise-ready Employee Management System built using ASP.NET Core (.NET 9) and Clean Architecture. The system enforces organizational hierarchy, dynamic leave quota management, claim-based authentication, and administrative personnel management.
 
-Architecture Structure
+---
 
-    EmployeeManagementSystem.Domain: Contains domain entities like User, Role, LeaveRequest, and Enums.
+## Key Features
 
-    EmployeeManagementSystem.Application: Contains CQRS Commands, Queries, DTOs, Handlers, and FluentValidation rules.
+### 1. Authentication and Role-Based Authorization
+- JWT Bearer Authentication: Secure API access using JWT tokens containing claims (NameIdentifier, Email, Role).
+- 4-Level Hierarchy Access Control: Role definitions for CEO (1), COO (2), HR (3), Project Manager (4), and Employee (5).
+- Interactive API Documentation: Full OpenAPI / Scalar UI integration with built-in Bearer Token authorization support.
 
-    EmployeeManagementSystem.Infrastructure: Handles EF Core AppDbContext database interactions, PBKDF2 Password Hashing, and JWT Token Generation.
+### 2. Hierarchical Leave Management System
+- Reporting Hierarchy Enforcement: Project Managers can only view and process leave requests submitted by their direct reportees (ReportToId).
+- Dynamic Leave Quota Calculations: Automatically tracks used and remaining leaves based on Approved and Pending requests (5-leave annual limit).
+- Quota Restoration: Rejected leave requests automatically restore the employee's available quota.
 
-    EmployeeManagementSystem.API: Exposes RESTful endpoints, configures JWT Bearer authentication, and renders Scalar API Reference UI.
+### 3. Administrative Control and Personnel Firing ("Fire" Feature)
+- CEO-Only Authority: Only users authenticated with the CEO role can terminate employees (updates status to IsActive = 0).
+- Self-Termination Guard: Built-in security check prevents CEOs from terminating their own accounts.
+- Admin Hierarchy Protection: Security guard prevents the termination of other CEOs or Root System Administrators (RoleId == 1).
+- Fired Personnel Audit: Restricted endpoint allowing CEOs to view and audit all terminated staff members.
 
-Features Implemented
+---
 
-    Authentication Module
+## Tech Stack and Architecture
 
-    User Registration with password hashing using PBKDF2 (SHA256, 100,000 iterations).
+- Framework: ASP.NET Core (.NET 9)
+- Architecture Pattern: Clean Architecture (Domain, Application, Infrastructure, API)
+- CQRS Pattern: MediatR for Command and Query Segregation
+- ORM: Entity Framework Core 9
+- Database: SQL Server
+- Validation: FluentValidation
+- Authentication: JWT (JSON Web Tokens)
+- API Documentation: Scalar UI / OpenAPI / Swagger UI
 
-    User Login with credentials verification and JWT token generation.
+---
 
-    Role-based validation during user setup.
+## Project Architecture Overview
 
-    Leave Management Module
+EmployeeManagementSystem/
+├── src/
+│   ├── Core/
+│   │   ├── Domain/                 # Entities, Enums, Interfaces
+│   │   └── Application/            # CQRS Features (Commands, Queries, DTOs, Handlers, Validators)
+│   ├── Infrastructure/
+│   │   ├── Persistence/            # AppDbContext, Entity Configurations
+│   │   └── Security/               # JwtTokenGenerator, PasswordHasher
+│   └── Presentation/
+│       └── API/                    # Controllers, Program.cs, Middleware
 
-    Apply Leave: Employees can submit leave requests with a date and reason.
+---
 
-    Review Leave: Project Managers can approve or reject leave requests with comments.
+## Getting Started
 
-    Employee Leave Status: Employees can fetch their submitted leaves and view real-time approval or rejection status messages.
+### Prerequisites
+- .NET 9 SDK
+- SQL Server
 
-    Developer Tooling and Documentation
+### Installation and Setup
 
-    Interactive API Documentation powered by Scalar UI (accessible at /scalar/v1).
+1. Clone the Repository:
+   git clone https://github.com/your-username/EmployeeManagementSystem.git
+   cd EmployeeManagementSystem
 
-    Manual Dependency Injection registrations configured in Program.cs.
+2. Configure Database Connection and JWT Settings:
+   Update your appsettings.json in the EmployeeManagementSystem.API project:
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Server=YOUR_SERVER;Database=EmployeeManagementDb;Trusted_Connection=True;TrustServerCertificate=True;"
+     },
+     "JwtSettings": {
+       "Secret": "YOUR_SUPER_SECRET_KEY_THAT_IS_AT_LEAST_32_BYTES_LONG!",
+       "Issuer": "EmployeeManagementSystem",
+       "Audience": "EmployeeManagementSystemUser",
+       "ExpiryMinutes": 60
+     }
+   }
 
-Database Setup Instructions
+3. Apply Database Migrations:
+   dotnet ef database update --project src/Infrastructure/Persistence --startup-project src/Presentation/API
 
-    Configure your SQL Server connection string in appsettings.json.
+4. Run the Application:
+   dotnet run --project src/Presentation/API
 
-    Open Package Manager Console in Visual Studio.
+5. Access Scalar UI Documentation:
+   http://localhost:60665/scalar/v1
 
-    Run the following command to create and update the database:
-    Update-Database
+---
 
-How to Run the Application
+## Usage Workflow
 
-    Press F5 in Visual Studio.
-
-    The application will automatically launch the Scalar API Reference interface.
-
-    Use the Auth endpoints to register or login a user.
-
-    Copy the generated JWT Token to test authenticated requests or use the Leave Management endpoints directly.
+1. Login: Send a request to POST /api/Auth/login to obtain your JWT Bearer token.
+2. Authorize: Paste the token into the Scalar UI Authorize section (Bearer <token>).
+3. Manager Operations: 
+   - Fetch team leaves: GET /api/Leaves/manager-pending-leaves
+   - Approve/Reject leave: POST /api/Leaves/review
+4. CEO Operations:
+   - Fire an employee: POST /api/Employees/fire/{employeeId}
+   - View fired employees list: GET /api/Employees/fired-list
