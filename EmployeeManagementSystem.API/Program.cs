@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using EmployeeManagementSystem.Application.Common.Interfaces;
+﻿using EmployeeManagementSystem.Application.Common.Interfaces;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Login;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Register;
 using EmployeeManagementSystem.Application.Features.Auth.Dtos;
+using EmployeeManagementSystem.Application.Features.Employees.Commands.FireEmployee;
+using EmployeeManagementSystem.Application.Features.Employees.Queries.GetFiredEmployees;
 using EmployeeManagementSystem.Application.Features.Leaves.Commands.ApplyLeave;
 using EmployeeManagementSystem.Application.Features.Leaves.Commands.ReviewLeave;
 using EmployeeManagementSystem.Application.Features.Leaves.Dtos;
@@ -23,6 +22,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,7 +95,9 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
-
+// Fire Employee & View Fired Employees Handlers
+builder.Services.AddTransient<IRequestHandler<FireEmployeeCommand, string>, FireEmployeeCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetFiredEmployeesQuery, List<FiredEmployeeDto>>, GetFiredEmployeesQueryHandler>();
 // 7. OpenAPI / Swagger Setup with Security Definition for Scalar UI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
