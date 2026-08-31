@@ -4,6 +4,7 @@ namespace EmployeeManagementSystem.Application.Features.Leaves.Commands.ReviewLe
 
 public record ReviewLeaveCommand(
     int LeaveId,
+    int ManagerId, 
     bool IsApproved,
     string? ManagerComment
 ) : IRequest<string>;

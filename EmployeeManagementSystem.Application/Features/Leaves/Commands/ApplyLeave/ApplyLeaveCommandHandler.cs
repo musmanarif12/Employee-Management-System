@@ -25,6 +25,11 @@ public class ApplyLeaveCommandHandler : IRequestHandler<ApplyLeaveCommand, strin
             throw new Exception("Employee not found.");
         }
 
+        if (employee.ReportToId == null && employee.RoleId != 1)
+        {
+            return "Cannot apply leave: You do not have an assigned Manager/Supervisor to report to.";
+        }
+
         int usedLeaveCount = await _context.LeaveRequests
             .CountAsync(l => l.EmployeeId == request.EmployeeId &&
                              (l.Status == LeaveStatus.Approved || l.Status == LeaveStatus.Pending),
@@ -32,7 +37,6 @@ public class ApplyLeaveCommandHandler : IRequestHandler<ApplyLeaveCommand, strin
 
         if (usedLeaveCount >= MaxLeaveQuota)
         {
-            //throw new Exception($"Leave quota full! You have already used/applied for all {MaxLeaveQuota} allowable leaves.");
             return $"Leave Application Declined: You have reached your maximum limit of {MaxLeaveQuota} leaves. Please contact HR or your manager for further assistance.";
         }
 

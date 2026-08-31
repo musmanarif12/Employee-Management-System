@@ -1,4 +1,7 @@
-﻿using EmployeeManagementSystem.Application.Common.Interfaces;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using EmployeeManagementSystem.Application.Common.Interfaces;
 using EmployeeManagementSystem.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,10 +20,18 @@ public class ReviewLeaveCommandHandler : IRequestHandler<ReviewLeaveCommand, str
     public async Task<string> Handle(ReviewLeaveCommand request, CancellationToken cancellationToken)
     {
         var leave = await _context.LeaveRequests
+            .Include(l => l.Employee)
             .FirstOrDefaultAsync(l => l.Id == request.LeaveId, cancellationToken);
 
         if (leave == null)
-            throw new Exception("Leave request not found.");
+        {
+            return "Error: Leave request not found.";
+        }
+
+        if (leave.Employee != null && leave.Employee.ReportToId != request.ManagerId)
+        {
+            return $"Unauthorized Access: You (Manager ID: {request.ManagerId}) do not have permission to review leave for '{leave.Employee.FullName}'.";
+        }
 
         leave.Status = request.IsApproved ? LeaveStatus.Approved : LeaveStatus.Rejected;
         leave.ManagerComment = request.ManagerComment;
@@ -28,6 +39,6 @@ public class ReviewLeaveCommandHandler : IRequestHandler<ReviewLeaveCommand, str
         await _context.SaveChangesAsync(cancellationToken);
 
         string statusText = request.IsApproved ? "Approved" : "Rejected";
-        return $"Leave request has been {statusText} by Manager.";
+        return $"Leave request #{leave.Id} has been {statusText} successfully.";
     }
 }

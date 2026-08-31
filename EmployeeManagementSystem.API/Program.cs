@@ -1,4 +1,7 @@
-﻿using EmployeeManagementSystem.Application.Common.Interfaces;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using EmployeeManagementSystem.Application.Common.Interfaces;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Login;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Register;
 using EmployeeManagementSystem.Application.Features.Auth.Dtos;
@@ -6,15 +9,20 @@ using EmployeeManagementSystem.Application.Features.Leaves.Commands.ApplyLeave;
 using EmployeeManagementSystem.Application.Features.Leaves.Commands.ReviewLeave;
 using EmployeeManagementSystem.Application.Features.Leaves.Dtos;
 using EmployeeManagementSystem.Application.Features.Leaves.Queries.GetEmployeeLeaves;
+using EmployeeManagementSystem.Application.Features.Leaves.Queries.GetManagerLeaves;
 using EmployeeManagementSystem.Infrastructure.Persistence;
 using EmployeeManagementSystem.Infrastructure.Security;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +51,7 @@ builder.Services.AddTransient<IValidator<RegisterCommand>, RegisterCommandValida
 // Login Feature
 builder.Services.AddTransient<IRequestHandler<LoginCommand, AuthResponseDto>, LoginCommandHandler>();
 builder.Services.AddTransient<IValidator<LoginCommand>, LoginCommandValidator>();
+
 // Apply Leave
 builder.Services.AddTransient<IRequestHandler<ApplyLeaveCommand, string>, ApplyLeaveCommandHandler>();
 builder.Services.AddTransient<IValidator<ApplyLeaveCommand>, ApplyLeaveCommandValidator>();
@@ -52,12 +61,15 @@ builder.Services.AddTransient<IRequestHandler<ReviewLeaveCommand, string>, Revie
 
 // Get Leaves (Employee Status View)
 builder.Services.AddTransient<IRequestHandler<GetEmployeeLeavesQuery, List<LeaveResponseDto>>, GetEmployeeLeavesQueryHandler>();
+
+// Get Leave (ProjectManager Status View)
+builder.Services.AddTransient<IRequestHandler<GetManagerLeavesQuery, List<LeaveResponseDto>>, GetManagerLeavesQueryHandler>();
+
 // 6. Safe Configuration for JWT Authentication
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettingsSection["Secret"] ?? "SUPER_SECRET_KEY_THAT_IS_AT_LEAST_32_BYTES_LONG_12345!";
 var issuer = jwtSettingsSection["Issuer"] ?? "EmployeeManagementSystem";
 var audience = jwtSettingsSection["Audience"] ?? "EmployeeManagementSystemUser";
-
 var key = Encoding.UTF8.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
@@ -82,9 +94,36 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 7. OpenAPI / Swagger Setup
+// 7. OpenAPI / Swagger Setup with Security Definition for Scalar UI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Employee Management API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Enter JWT Bearer token only. Example: eyJhbGciOi...",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -105,8 +144,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); // First Authenticate
+app.UseAuthorization();  // Then Authorize
 
 app.MapControllers();
 
