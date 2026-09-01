@@ -15,5 +15,8 @@
         public User? ReportTo { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        // Add Navigation Property for EmployeeProfile
+        public EmployeeProfile? Profile { get; set; }
     }
 }

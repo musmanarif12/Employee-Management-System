@@ -14,6 +14,7 @@ namespace EmployeeManagementSystem.Infrastructure.Persistence
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+        public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
@@ -40,6 +41,12 @@ namespace EmployeeManagementSystem.Infrastructure.Persistence
                 .WithMany()
                 .HasForeignKey(u => u.ReportToId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EmployeeProfile>()
+                .HasOne(p => p.User)
+                .WithOne(u => u.Profile)
+                .HasForeignKey<EmployeeProfile>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

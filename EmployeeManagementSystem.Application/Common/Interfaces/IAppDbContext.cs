@@ -8,6 +8,7 @@ public interface IAppDbContext
     DbSet<User> Users { get; }
     DbSet<Role> Roles { get; }
     DbSet<LeaveRequest> LeaveRequests { get; }
+    DbSet<EmployeeProfile> EmployeeProfiles { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

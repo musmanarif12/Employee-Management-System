@@ -3,6 +3,7 @@ using EmployeeManagementSystem.Application.Features.Auth.Commands.Login;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Register;
 using EmployeeManagementSystem.Application.Features.Auth.Dtos;
 using EmployeeManagementSystem.Application.Features.Employees.Commands.FireEmployee;
+using EmployeeManagementSystem.Application.Features.Employees.Commands.UpdateProfile;
 using EmployeeManagementSystem.Application.Features.Employees.Queries.GetFiredEmployees;
 using EmployeeManagementSystem.Application.Features.Leaves.Commands.ApplyLeave;
 using EmployeeManagementSystem.Application.Features.Leaves.Commands.ReviewLeave;
@@ -98,6 +99,11 @@ builder.Services.AddAuthentication(options =>
 // Fire Employee & View Fired Employees Handlers
 builder.Services.AddTransient<IRequestHandler<FireEmployeeCommand, string>, FireEmployeeCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetFiredEmployeesQuery, List<FiredEmployeeDto>>, GetFiredEmployeesQueryHandler>();
+
+// Profile Management Handlers
+builder.Services.AddTransient<IRequestHandler<UpdateSelfProfileCommand, string>, UpdateSelfProfileCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateEmployeeByHrCommand, string>, UpdateEmployeeByHrCommandHandler>();
+
 // 7. OpenAPI / Swagger Setup with Security Definition for Scalar UI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
