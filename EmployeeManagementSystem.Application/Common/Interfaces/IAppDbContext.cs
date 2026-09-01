@@ -9,6 +9,6 @@ public interface IAppDbContext
     DbSet<Role> Roles { get; }
     DbSet<LeaveRequest> LeaveRequests { get; }
     DbSet<EmployeeProfile> EmployeeProfiles { get; }
-
+    DbSet<AttendanceRecord> AttendanceRecords { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -18,5 +18,7 @@
 
         // Add Navigation Property for EmployeeProfile
         public EmployeeProfile? Profile { get; set; }
+
+        public ICollection<AttendanceRecord> AttendanceRecords { get; set; } = new List<AttendanceRecord>();
     }
 }

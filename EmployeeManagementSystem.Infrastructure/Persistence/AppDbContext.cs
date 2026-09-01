@@ -15,6 +15,7 @@ namespace EmployeeManagementSystem.Infrastructure.Persistence
         public DbSet<Role> Roles { get; set; }
         public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
         public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
+        public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
@@ -46,6 +47,11 @@ namespace EmployeeManagementSystem.Infrastructure.Persistence
                 .HasOne(p => p.User)
                 .WithOne(u => u.Profile)
                 .HasForeignKey<EmployeeProfile>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+           modelBuilder.Entity<AttendanceRecord>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.AttendanceRecords)
+                .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

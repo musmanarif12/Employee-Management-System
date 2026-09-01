@@ -1,4 +1,7 @@
 ﻿using EmployeeManagementSystem.Application.Common.Interfaces;
+using EmployeeManagementSystem.Application.Features.Attendance.Commands;
+using EmployeeManagementSystem.Application.Features.Attendance.Handlers;
+using EmployeeManagementSystem.Application.Features.Attendance.Queries;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Login;
 using EmployeeManagementSystem.Application.Features.Auth.Commands.Register;
 using EmployeeManagementSystem.Application.Features.Auth.Dtos;
@@ -103,6 +106,11 @@ builder.Services.AddTransient<IRequestHandler<GetFiredEmployeesQuery, List<Fired
 // Profile Management Handlers
 builder.Services.AddTransient<IRequestHandler<UpdateSelfProfileCommand, string>, UpdateSelfProfileCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<UpdateEmployeeByHrCommand, string>, UpdateEmployeeByHrCommandHandler>();
+
+// Attendance Handlers
+builder.Services.AddTransient<IRequestHandler<AddAttendanceCommand, string>, AddAttendanceCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateAttendanceByHrCommand, string>, UpdateAttendanceByHrCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetAllAttendanceForHrQuery, List<AttendanceResponseDto>>, GetAllAttendanceForHrQueryHandler>();
 
 // 7. OpenAPI / Swagger Setup with Security Definition for Scalar UI
 builder.Services.AddEndpointsApiExplorer();
