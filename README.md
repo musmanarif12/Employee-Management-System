@@ -1,3 +1,4 @@
+
 # Employee Management System (EMS)
 
 A secure, high-performance Employee Management System backend built with .NET 9 following Clean Architecture principles, CQRS (Command Query Responsibility Segregation) pattern with MediatR, and Entity Framework Core 9.
@@ -9,6 +10,12 @@ A secure, high-performance Employee Management System backend built with .NET 9 
 * Authentication & Role-Based Access Control (RBAC):
   * Secure JWT (JSON Web Token) authentication.
   * Hierarchical claim-based authorization supporting roles: CEO, COO, HR, Project Manager, and Employee.
+
+* Attendance Tracking & Time Management:
+  * Self-Service Logging: Employees can log daily Check-In and Check-Out times.
+  * Automated Hours Calculation: Automatically calculates total working hours upon submission.
+  * Immutability Guard: Enforces a strict business rule preventing employees from editing or re-submitting attendance for the same day once logged.
+  * HR Authority & Overrides: Restricted update access allowing only HR and CEO roles to review, modify, or correct employee attendance logs.
 
 * Field-Level Authorization & Employee Profiles:
   * 1-to-1 Profile Extension: Segregated personal details and sensitive corporate data into an EmployeeProfile model.
@@ -45,27 +52,41 @@ A secure, high-performance Employee Management System backend built with .NET 9 
 
 ```text
 src/
-├── Domain/                 # Enterprise Entities (User, EmployeeProfile, BaseEntity, etc.)
+├── Domain/                 # Enterprise Entities (User, EmployeeProfile, AttendanceRecord, etc.)
 ├── Application/            # CQRS Features, DTOs, Handlers, Interfaces, Business Logic
 ├── Infrastructure/         # Persistence (AppDbContext), Migrations, Services
 └── API/                    # Controllers, Middlewares, Program.cs Configuration
 
-Getting Started
-Prerequisites
+```
 
-    .NET 9 SDK
+---
 
-    SQL Server (LocalDB or Enterprise instance)
+## Getting Started
 
-    Visual Studio 2022 / Antigravity IDE / VS Code
+### Prerequisites
 
-Database Setup
+* .NET 9 SDK
+* SQL Server (LocalDB or Enterprise instance)
+* Visual Studio 2022 / Antigravity IDE / VS Code
+
+### Database Setup
 
 Execute the following Entity Framework Core CLI command to apply migrations and build the database schema:
+
+```bash
 dotnet ef database update --project EmployeeManagementSystem.Infrastructure --startup-project EmployeeManagementSystem.API
 
-Running the Project
+```
 
+### Running the Project
+
+```bash
 dotnet run --project EmployeeManagementSystem.API
 
-Navigate to https://localhost:<port>/scalar/v1 in your browser to test endpoints via Scalar UI.
+```
+
+Navigate to `https://localhost:<port>/scalar/v1` in your browser to test endpoints via Scalar UI.
+
+```
+
+```
