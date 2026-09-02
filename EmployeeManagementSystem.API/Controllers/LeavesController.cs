@@ -60,6 +60,7 @@ public class LeavesController : ControllerBase
     }
 
     [HttpGet("manager-pending-leaves")]
+    [Authorize(Roles = "ProjectManager")]
     public async Task<ActionResult<List<LeaveResponseDto>>> GetManagerLeaves()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
