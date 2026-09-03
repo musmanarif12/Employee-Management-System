@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-function LoginPage({ onSwitchToSignUp }) {
+const API_BASE = "https://localhost:60665/api";
+
+function LoginPage({ onSwitchToSignUp, onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -10,15 +12,17 @@ function LoginPage({ onSwitchToSignUp }) {
     e.preventDefault();
     setError("");
     try {
-      const response = await axios.post("https://localhost:60665/api/Auth/login", {
-        email: email,
-        password: password,
-      });
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("role", response.data.role);
-      localStorage.setItem("hasAccount", "true");
+      const res = await axios.post(`${API_BASE}/Auth/login`, { email, password });
+      
+      // Store token and role
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("role", res.data.role);
 
-      window.location.reload();
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      } else {
+        window.location.reload();
+      }
     } catch (err) {
       setError("Invalid email or password.");
     }
@@ -29,36 +33,34 @@ function LoginPage({ onSwitchToSignUp }) {
       <h1>Login</h1>
       <form onSubmit={handleLogin}>
         <div>
-          <label>Email Address</label>
+          <label>Email Address</label><br />
           <input
             type="email"
-            placeholder="******"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <br />
         <div>
-          <label>Password</label>
+          <label>Password</label><br />
           <input
             type="password"
-            placeholder="******"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
         </div>
         <br />
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <div>
-          <button type="submit">Login</button>
-        </div>
+        <button type="submit">Login</button>
       </form>
-      {/* <p>
+      <p>
         Don't have an account?{" "}
         <button type="button" onClick={onSwitchToSignUp}>
           Sign Up
         </button>
-      </p> */}
+      </p>
     </div>
   );
 }

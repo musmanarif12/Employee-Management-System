@@ -3,197 +3,166 @@ import axios from "axios";
 
 const API_BASE = "https://localhost:60665/api";
 
-const ROLE_MAPPING = {
-  1: "CEO",
-  2: "COO",
-  3: "HR",
-  4: "Project Manager",
-  5: "Employee",
-};
-
 function ManagerDashboard() {
-  const [activeView, setActiveView] = useState("home");
+  const [view, setView] = useState("home");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const getAuthHeader = () => ({
-    headers: {
-      Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-    },
+  const getHeader = () => ({
+    headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}` },
   });
 
-  const goHome = () => {
-    setActiveView("home");
-    setData(null);
-    setError("");
+  const handleLogout = () => {
+    sessionStorage.clear();
+    localStorage.removeItem("hasAccount");
+    window.location.reload();
   };
 
-  const getRoleName = (profileData) => {
-    if (!profileData) return "N/A";
-    const roleId = profileData.roleId || profileData.role;
-    if (ROLE_MAPPING[roleId]) return ROLE_MAPPING[roleId];
-    if (typeof profileData.role === "string") {
-      if (profileData.role === "4" || profileData.role === "ProjectManager") return "Project Manager";
-      return profileData.role;
+  const fetchData = async (targetView, url) => {
+    setView(targetView);
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get(`${API_BASE}${url}`, getHeader());
+      setData(res.data);
+    } catch (err) {
+      setError("Failed to load data.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Fix: Manager Dashboard par role hamesha "Project Manager" show karega
+  const getRoleName = () => {
     return "Project Manager";
   };
 
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await axios.get(`${API_BASE}/Employees/me/profile`, getAuthHeader());
-      setData(res.data);
-    } catch (err) {
-      setError("Profile load nahi ho saki.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMyAttendance = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await axios.get(`${API_BASE}/Attendance/my-history`, getAuthHeader());
-      setData(res.data);
-    } catch (err) {
-      setError("Attendance history fetch nahi ho saki.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPendingLeaves = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await axios.get(`${API_BASE}/Leaves/manager-pending-leaves`, getAuthHeader());
-      setData(res.data);
-    } catch (err) {
-      setError("Team leave requests load nahi ho sakain.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClick = (view, fetchFn) => (e) => {
-    e.preventDefault();
-    setActiveView(view);
-    fetchFn();
-  };
-
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Manager Dashboard</h1>
+    <div style={{ padding: "20px" }}>
+      {/* Header section with Logout button */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <h1 style={{ margin: 0 }}>Manager Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: "8px 16px",
+            cursor: "pointer",
+            backgroundColor: "#dc3545",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+          }}
+        >
+          Logout
+        </button>
+      </div>
 
-      {activeView === "home" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "16px" }}>
-          <div>
-            <a href="#" onClick={handleClick("profile", fetchProfile)}>
-              1. My Personal Profile
-            </a>
-          </div>
-          <div>
-            <a href="#" onClick={handleClick("myAttendance", fetchMyAttendance)}>
-              2. My Personal Attendance Record
-            </a>
-          </div>
-          <div>
-            <a href="#" onClick={handleClick("pendingLeaves", fetchPendingLeaves)}>
-              3. Review Team Pending Leaves
-            </a>
-          </div>
-        </div>
-      )}
-
-      {activeView !== "home" && (
-        <div>
-          <button onClick={goHome} style={{ marginBottom: "15px", padding: "6px 12px", cursor: "pointer" }}>
-            ← Back to Dashboard
+      {view === "home" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <button onClick={() => fetchData("profile", "/Employees/me/profile")}>
+            Check Personal Information
           </button>
+          <button onClick={() => fetchData("team", "/Employees/my-team")}>
+            Check Team Members
+          </button>
+          <button onClick={() => fetchData("leaves", "/Leaves/pending-requests")}>
+            Manage Pending Leave Requests
+          </button>
+        </div>
+      ) : (
+        <div>
+          <button onClick={() => setView("home")}>← Back</button>
 
           {loading && <p>Loading...</p>}
           {error && <p style={{ color: "red" }}>{error}</p>}
 
-          {!loading && !error && activeView === "profile" && data && (
-            <div>
-              <h2>My Profile</h2>
-              <p><b>User ID:</b> {data.id || data.userId || 3}</p>
-              <p><b>Name:</b> {data.fullName || data.name || "Zikria Tariq"}</p>
-              <p><b>Email:</b> {data.email}</p>
-              <p><b>Role:</b> {getRoleName(data)}</p>
-            </div>
-          )}
-
-          {!loading && !error && activeView === "myAttendance" && (
-            <div>
-              <h2>My Attendance History</h2>
-              {!data || data.length === 0 ? (
-                <p>Record nahi mila.</p>
-              ) : (
-                <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "#f2f2f2" }}>
-                      <th>Record ID</th>
-                      <th>User ID</th>
-                      <th>Date</th>
-                      <th>Check In</th>
-                      <th>Check Out</th>
-                      <th>Total Hours</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((att, i) => (
-                      <tr key={att.id || att.attendanceId || i}>
-                        <td>{att.id || att.attendanceId}</td>
-                        <td><b>{att.userId || att.employeeId}</b></td>
-                        <td>{att.date ? att.date.split("T")[0] : "N/A"}</td>
-                        <td>{att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString() : "N/A"}</td>
-                        <td>{att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString() : "N/A"}</td>
-                        <td>{att.totalHours ? `${att.totalHours} hrs` : "N/A"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {!loading && !error && data && (
+            <>
+              {/* Profile View (User ID removed & Role forced to Project Manager) */}
+              {view === "profile" && (
+                <div>
+                  <h2>Personal Information</h2>
+                  <p><b>Name:</b> {data.fullName || data.name}</p>
+                  <p><b>Email:</b> {data.email}</p>
+                  <p><b>Role:</b> {getRoleName()}</p>
+                </div>
               )}
-            </div>
-          )}
 
-          {!loading && !error && activeView === "pendingLeaves" && (
-            <div>
-              <h2>Pending Team Leave Requests</h2>
-              {!data || data.length === 0 ? (
-                <p>Koi pending leave request nahi hai.</p>
-              ) : (
-                <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "#f2f2f2" }}>
-                      <th>Leave ID</th>
-                      <th>Leave Date</th>
-                      <th>Reason</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((leave, index) => {
-                      const currentLeaveId = leave.id ?? leave.leaveId ?? leave.requestId ?? (index + 1);
-
-                      return (
-                        <tr key={currentLeaveId}>
-                          <td>{currentLeaveId}</td>
-                          <td>{leave.leaveDate ? new Date(leave.leaveDate).toLocaleDateString() : "N/A"}</td>
-                          <td>{leave.reason || "N/A"}</td>
-                          <td>{leave.status || "N/A"}</td>
+              {/* Team Members View */}
+              {view === "team" && (
+                <div>
+                  <h2>Team Members</h2>
+                  {data.length === 0 ? (
+                    <p>No team members assigned.</p>
+                  ) : (
+                    <table border="1" cellPadding="8" style={{ borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Role</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {data.map((member, i) => (
+                          <tr key={i}>
+                            <td>{member.fullName || member.name}</td>
+                            <td>{member.email}</td>
+                            <td>{member.role || "Employee"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               )}
-            </div>
+
+              {/* Pending Leaves View */}
+              {view === "leaves" && (
+                <div>
+                  <h2>Pending Leave Requests</h2>
+                  {data.length === 0 ? (
+                    <p>No pending leave requests found.</p>
+                  ) : (
+                    <table border="1" cellPadding="8" style={{ borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>Leave Type</th>
+                          <th>From</th>
+                          <th>To</th>
+                          <th>Reason</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.map((leave, i) => (
+                          <tr key={i}>
+                            <td>{leave.employeeName || leave.fullName || "N/A"}</td>
+                            <td>{leave.leaveType || leave.type || "N/A"}</td>
+                            <td>{leave.fromDate || "N/A"}</td>
+                            <td>{leave.toDate || "N/A"}</td>
+                            <td>{leave.reason}</td>
+                            <td>
+                              <button style={{ marginRight: "5px" }}>Approve</button>
+                              <button>Reject</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
