@@ -52,11 +52,17 @@ public class LeavesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("my-leaves/{employeeId}")]
-    public async Task<ActionResult<List<LeaveResponseDto>>> GetMyLeaves(int employeeId)
+    [HttpGet("my-leaves")]
+    public async Task<IActionResult> GetMyLeaves()
     {
-        var result = await _mediator.Send(new GetEmployeeLeavesQuery(employeeId));
-        return Ok(result);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized("Invalid or missing User Claim in JWT Token.");
+        }
+
+        var leaves = await _mediator.Send(new GetEmployeeLeavesQuery(userId));
+        return Ok(leaves);
     }
 
     [HttpGet("manager-pending-leaves")]

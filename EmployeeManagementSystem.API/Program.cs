@@ -32,6 +32,20 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ----------------------------------------------------
+// 0. CORS Policy Configuration
+// ----------------------------------------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // React Vite & Cra origins
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // 1. Database & AppDbContext Configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -71,6 +85,19 @@ builder.Services.AddTransient<IRequestHandler<GetEmployeeLeavesQuery, List<Leave
 // Get Leave (ProjectManager Status View)
 builder.Services.AddTransient<IRequestHandler<GetManagerLeavesQuery, List<LeaveResponseDto>>, GetManagerLeavesQueryHandler>();
 
+// Fire Employee & View Fired Employees Handlers
+builder.Services.AddTransient<IRequestHandler<FireEmployeeCommand, string>, FireEmployeeCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetFiredEmployeesQuery, List<FiredEmployeeDto>>, GetFiredEmployeesQueryHandler>();
+
+// Profile Management Handlers
+builder.Services.AddTransient<IRequestHandler<UpdateSelfProfileCommand, string>, UpdateSelfProfileCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateEmployeeByHrCommand, string>, UpdateEmployeeByHrCommandHandler>();
+
+// Attendance Handlers
+builder.Services.AddTransient<IRequestHandler<AddAttendanceCommand, string>, AddAttendanceCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateAttendanceByHrCommand, string>, UpdateAttendanceByHrCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetAllAttendanceForHrQuery, List<AttendanceResponseDto>>, GetAllAttendanceForHrQueryHandler>();
+
 // 6. Safe Configuration for JWT Authentication
 var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettingsSection["Secret"] ?? "SUPER_SECRET_KEY_THAT_IS_AT_LEAST_32_BYTES_LONG_12345!";
@@ -99,18 +126,6 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
-// Fire Employee & View Fired Employees Handlers
-builder.Services.AddTransient<IRequestHandler<FireEmployeeCommand, string>, FireEmployeeCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<GetFiredEmployeesQuery, List<FiredEmployeeDto>>, GetFiredEmployeesQueryHandler>();
-
-// Profile Management Handlers
-builder.Services.AddTransient<IRequestHandler<UpdateSelfProfileCommand, string>, UpdateSelfProfileCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<UpdateEmployeeByHrCommand, string>, UpdateEmployeeByHrCommandHandler>();
-
-// Attendance Handlers
-builder.Services.AddTransient<IRequestHandler<AddAttendanceCommand, string>, AddAttendanceCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<UpdateAttendanceByHrCommand, string>, UpdateAttendanceByHrCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<GetAllAttendanceForHrQuery, List<AttendanceResponseDto>>, GetAllAttendanceForHrQueryHandler>();
 
 // 7. OpenAPI / Swagger Setup with Security Definition for Scalar UI
 builder.Services.AddEndpointsApiExplorer();
@@ -161,6 +176,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ----------------------------------------------------
+// IMPORTANT: CORS Middleware Placement
+// Routing se pehle CORS allow hona chahiye preflight (OPTIONS) requests ke liye
+// ----------------------------------------------------
+app.UseCors("AllowReactApp");
 
 app.UseAuthentication(); // First Authenticate
 app.UseAuthorization();  // Then Authorize

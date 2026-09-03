@@ -3,6 +3,11 @@ using EmployeeManagementSystem.Application.Features.Leaves.Dtos;
 using EmployeeManagementSystem.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EmployeeManagementSystem.Application.Features.Leaves.Queries.GetEmployeeLeaves;
 
@@ -19,6 +24,7 @@ public class GetEmployeeLeavesQueryHandler : IRequestHandler<GetEmployeeLeavesQu
     public async Task<List<LeaveResponseDto>> Handle(GetEmployeeLeavesQuery request, CancellationToken cancellationToken)
     {
         var leaves = await _context.LeaveRequests
+            .AsNoTracking()
             .Where(l => l.EmployeeId == request.EmployeeId)
             .OrderByDescending(l => l.AppliedOn)
             .ToListAsync(cancellationToken);

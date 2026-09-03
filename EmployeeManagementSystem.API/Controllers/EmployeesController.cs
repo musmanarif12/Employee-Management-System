@@ -1,6 +1,7 @@
 ﻿using EmployeeManagementSystem.Application.Features.Employees.Commands.FireEmployee;
 using EmployeeManagementSystem.Application.Features.Employees.Commands.UpdateProfile;
 using EmployeeManagementSystem.Application.Features.Employees.Queries.GetFiredEmployees;
+using EmployeeManagementSystem.Application.Features.Employees.Queries.GetMyProfile;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -93,6 +94,19 @@ public class EmployeesController : ControllerBase
 
         var result = await _mediator.Send(command);
 
+        return Ok(result);
+    }
+    [HttpGet("me/profile")]
+    [Authorize]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst("sub")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await _mediator.Send(new GetMyProfileQuery(userId));
         return Ok(result);
     }
 }

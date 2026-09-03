@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using EmployeeManagementSystem.Application.Features.Attendance.Commands;
+﻿using EmployeeManagementSystem.Application.Features.Attendance.Commands;
 using EmployeeManagementSystem.Application.Features.Attendance.Queries;
+using EmployeeManagementSystem.Application.Features.Attendance.Queries.GetMyAttendance;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace EmployeeManagementSystem.API.Controllers;
 
@@ -71,6 +72,19 @@ public class AttendanceController : ControllerBase
         var command = new UpdateAttendanceByHrCommand(request.AttendanceId, userRole, request.CheckInTime, request.CheckOutTime);
         var result = await _mediator.Send(command);
 
+        return Ok(result);
+    }
+    [HttpGet("my-history")]
+    [Authorize]
+    public async Task<IActionResult> GetMyAttendanceHistory()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst("sub")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await _mediator.Send(new GetMyAttendanceQuery(userId));
         return Ok(result);
     }
 }
