@@ -1,173 +1,170 @@
 import React, { useState } from "react";
-import axios from "axios";
 
-const API_BASE = "https://localhost:60665/api";
-
-function ManagerDashboard() {
+const ManagerDashboard = () => {
   const [view, setView] = useState("home");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const getHeader = () => ({
-    headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}` },
-  });
-
-  const handleLogout = () => {
-    sessionStorage.clear();
-    localStorage.removeItem("hasAccount");
-    window.location.reload();
-  };
-
-  const fetchData = async (targetView, url) => {
-    setView(targetView);
+  const fetchData = async (viewType, endpoint) => {
     setLoading(true);
     setError("");
+    setData(null);
+
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
     try {
-      const res = await axios.get(`${API_BASE}${url}`, getHeader());
-      setData(res.data);
+      const response = await fetch(`/api${endpoint}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load data (Status: ${response.status})`);
+      }
+
+      const result = await response.json();
+      setData(result);
+      setView(viewType);
     } catch (err) {
-      setError("Failed to load data.");
+      setError(err.message || "Failed to load data.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Fix: Manager Dashboard par role hamesha "Project Manager" show karega
-  const getRoleName = () => {
-    return "Project Manager";
+  const handleLogout = () => {
+    sessionStorage.clear();
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const buttonStyle = {
+    width: "100%",
+    padding: "10px",
+    backgroundColor: "#efefef",
+    border: "1px solid #767676",
+    borderRadius: "3px",
+    fontSize: "14px",
+    cursor: "pointer",
+    textAlign: "center",
+    boxSizing: "border-box"
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      {/* Header section with Logout button */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ margin: 0 }}>Manager Dashboard</h1>
+    <div style={{ padding: "20px 40px", fontFamily: "Times New Roman, serif" }}>
+      {/* Header Section */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h1 style={{ margin: 0, fontSize: "36px", fontWeight: "bold" }}>Manager Dashboard</h1>
         <button
           onClick={handleLogout}
           style={{
-            padding: "8px 16px",
-            cursor: "pointer",
             backgroundColor: "#dc3545",
-            color: "#fff",
+            color: "white",
             border: "none",
+            padding: "8px 20px",
+            fontSize: "16px",
             borderRadius: "4px",
+            cursor: "pointer",
+            fontFamily: "sans-serif"
           }}
         >
           Logout
         </button>
       </div>
 
-      {view === "home" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <button onClick={() => fetchData("profile", "/Employees/me/profile")}>
+      {/* Back Button */}
+      {view !== "home" && (
+        <button
+          onClick={() => {
+            setView("home");
+            setError("");
+            setData(null);
+          }}
+          style={{
+            marginBottom: "15px",
+            padding: "6px 16px",
+            cursor: "pointer",
+            fontFamily: "sans-serif"
+          }}
+        >
+          &larr; Back
+        </button>
+      )}
+
+      {error && <p style={{ color: "red", fontWeight: "bold", fontFamily: "sans-serif" }}>{error}</p>}
+      {loading && <p style={{ fontFamily: "sans-serif" }}>Loading...</p>}
+
+      {/* Home Buttons List */}
+      {view === "home" && !loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
+          <button
+            onClick={() => fetchData("profile", "/Employees/me/profile")}
+            style={buttonStyle}
+          >
             Check Personal Information
           </button>
-          <button onClick={() => fetchData("team", "/Employees/my-team")}>
-            Check Team Members
-          </button>
-          <button onClick={() => fetchData("leaves", "/Leaves/pending-requests")}>
+          
+          <button
+            onClick={() => fetchData("leaves", "/Leaves/manager-pending-leaves")}
+            style={buttonStyle}
+          >
             Manage Pending Leave Requests
           </button>
         </div>
-      ) : (
-        <div>
-          <button onClick={() => setView("home")}>← Back</button>
+      )}
 
-          {loading && <p>Loading...</p>}
-          {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* Profile View */}
+      {view === "profile" && data && (
+        <div style={{ marginTop: "15px", fontFamily: "sans-serif" }}>
+          <h3>Personal Profile</h3>
+          <p><strong>Name:</strong> {data.fullName || data.name || "N/A"}</p>
+          <p><strong>Email:</strong> {data.email || "N/A"}</p>
+          <p><strong>Role:</strong> Manager</p>
+        </div>
+      )}
 
-          {!loading && !error && data && (
-            <>
-              {/* Profile View (User ID removed & Role forced to Project Manager) */}
-              {view === "profile" && (
-                <div>
-                  <h2>Personal Information</h2>
-                  <p><b>Name:</b> {data.fullName || data.name}</p>
-                  <p><b>Email:</b> {data.email}</p>
-                  <p><b>Role:</b> {getRoleName()}</p>
-                </div>
-              )}
-
-              {/* Team Members View */}
-              {view === "team" && (
-                <div>
-                  <h2>Team Members</h2>
-                  {data.length === 0 ? (
-                    <p>No team members assigned.</p>
-                  ) : (
-                    <table border="1" cellPadding="8" style={{ borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Role</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.map((member, i) => (
-                          <tr key={i}>
-                            <td>{member.fullName || member.name}</td>
-                            <td>{member.email}</td>
-                            <td>{member.role || "Employee"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-
-              {/* Pending Leaves View */}
-              {view === "leaves" && (
-                <div>
-                  <h2>Pending Leave Requests</h2>
-                  {data.length === 0 ? (
-                    <p>No pending leave requests found.</p>
-                  ) : (
-                    <table border="1" cellPadding="8" style={{ borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr>
-                          <th>Employee</th>
-                          <th>Leave Type</th>
-                          <th>From</th>
-                          <th>To</th>
-                          <th>Reason</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.map((leave, i) => (
-                          <tr key={i}>
-                            <td>{leave.employeeName || leave.fullName || "N/A"}</td>
-                            <td>{leave.leaveType || leave.type || "N/A"}</td>
-                            <td>{leave.fromDate || "N/A"}</td>
-                            <td>{leave.toDate || "N/A"}</td>
-                            <td>{leave.reason}</td>
-                            <td>
-                              <button style={{ marginRight: "5px" }}>Approve</button>
-                              <button>Reject</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
-            </>
+      {/* Leave Requests View */}
+      {view === "leaves" && (
+        <div style={{ marginTop: "15px", fontFamily: "sans-serif" }}>
+          <h3>Pending Leave Requests</h3>
+          {Array.isArray(data) && data.length > 0 ? (
+            <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#f2f2f2" }}>
+                  <th>Leave Date</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((leave, index) => (
+                  <tr key={leave.id || leave.Id || index}>
+                    <td>
+                      {leave.leaveDate || leave.LeaveDate 
+                        ? new Date(leave.leaveDate || leave.LeaveDate).toLocaleDateString() 
+                        : "N/A"}
+                    </td>
+                    <td>{leave.reason || leave.Reason || "N/A"}</td>
+                    <td>
+                      {leave.status === 1 || leave.status === "Pending" || leave.Status === 1 || leave.Status === "Pending" 
+                        ? "Pending" 
+                        : leave.status || leave.Status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No pending leave requests found.</p>
           )}
         </div>
       )}
     </div>
   );
-}
+};
 
 export default ManagerDashboard;

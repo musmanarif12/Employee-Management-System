@@ -39,7 +39,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // React Vite & Cra origins
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // React Vite & CRA origins
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -160,13 +160,18 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure HTTP Request Pipeline
+// ----------------------------------------------------
+// IMPORTANT PIPELINE ORDER FOR CORS & AUTH
+// ----------------------------------------------------
+
+// 1. MUST BE FIRST: UseCors is top-priority so OPTIONS preflights pass immediately
+app.UseCors("AllowReactApp");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Map Scalar UI
     app.MapScalarApiReference(options =>
     {
         options.WithTitle("Employee Management API")
@@ -175,16 +180,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// Disable or keep HttpsRedirection after CORS
+// app.UseHttpsRedirection(); 
 
-// ----------------------------------------------------
-// IMPORTANT: CORS Middleware Placement
-// Routing se pehle CORS allow hona chahiye preflight (OPTIONS) requests ke liye
-// ----------------------------------------------------
-app.UseCors("AllowReactApp");
+app.UseRouting();
 
-app.UseAuthentication(); // First Authenticate
-app.UseAuthorization();  // Then Authorize
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
