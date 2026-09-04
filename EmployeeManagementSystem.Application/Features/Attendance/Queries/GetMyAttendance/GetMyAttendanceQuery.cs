@@ -26,22 +26,21 @@ public class GetMyAttendanceQueryHandler : IRequestHandler<GetMyAttendanceQuery,
         var records = await _context.AttendanceRecords
             .AsNoTracking()
             .Where(a => a.UserId == request.UserId)
-            .Select(a => new
+            .Select(a => new MyAttendanceDto
             {
-                a.Id,
-                a.Date,
-                a.CheckInTime,
-                a.CheckOutTime
+                Id = a.Id,
+                Date = DateTime.Parse(a.Date), 
+                CheckInTime = a.CheckInTime,
+                CheckOutTime = a.CheckOutTime,
+                Status = string.IsNullOrEmpty(a.Status)
+                    ? (a.CheckInTime != DateTime.MinValue ? "Present" : "Absent")
+                    : a.Status,
+                RequestedCheckIn = a.RequestedCheckIn,
+                RequestedCheckOut = a.RequestedCheckOut,
+                CorrectionReason = a.CorrectionReason
             })
             .ToListAsync(cancellationToken);
 
-        return records.Select(a => new MyAttendanceDto
-        {
-            Id = a.Id,
-            Date = a.Date,
-            CheckInTime = a.CheckInTime,
-            CheckOutTime = a.CheckOutTime,
-            Status = a.CheckInTime != DateTime.MinValue ? "Present" : "Absent"
-        }).ToList();
+        return records;
     }
 }

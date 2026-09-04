@@ -1,4 +1,5 @@
 ﻿using EmployeeManagementSystem.Application.Features.Attendance.Commands;
+using EmployeeManagementSystem.Application.Features.Attendance.Dtos;
 using EmployeeManagementSystem.Application.Features.Attendance.Queries;
 using EmployeeManagementSystem.Application.Features.Attendance.Queries.GetMyAttendance;
 using MediatR;
@@ -86,5 +87,32 @@ public class AttendanceController : ControllerBase
 
         var result = await _mediator.Send(new GetMyAttendanceQuery(userId));
         return Ok(result);
+    }
+    [HttpPost("request-correction")]
+    public async Task<IActionResult> RequestCorrection([FromBody] RequestCorrectionDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return Unauthorized();
+        }
+
+        var command = new RequestCorrectionCommand
+        {
+            AttendanceId = dto.AttendanceId,
+            RequestedCheckIn = dto.RequestedCheckIn,
+            RequestedCheckOut = dto.RequestedCheckOut,
+            Reason = dto.Reason,
+            EmployeeId = int.Parse(userIdClaim)
+        };
+
+        var result = await _mediator.Send(command);
+
+        if (!result)
+        {
+            return BadRequest("Unable to process correction request.");
+        }
+
+        return Ok(new { Message = "Correction request submitted successfully." });
     }
 }

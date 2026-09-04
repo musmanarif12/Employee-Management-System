@@ -47,7 +47,8 @@ public class AddAttendanceCommandHandler : IRequestHandler<AddAttendanceCommand,
             CheckInTime = request.CheckInTime,
             CheckOutTime = request.CheckOutTime,
             TotalHours = calculatedHours,
-            Date = todayDate
+            Date = todayDate,
+            Status = "Present"
         };
 
         _context.AttendanceRecords.Add(attendance);
@@ -92,6 +93,7 @@ public class UpdateAttendanceByHrCommandHandler : IRequestHandler<UpdateAttendan
         record.CheckInTime = request.CheckInTime;
         record.CheckOutTime = request.CheckOutTime;
         record.TotalHours = calculatedHours;
+        record.Status = "Approved / Updated";
         record.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -126,7 +128,11 @@ public class GetAllAttendanceForHrQueryHandler : IRequestHandler<GetAllAttendanc
                 a.Date,
                 a.CheckInTime,
                 a.CheckOutTime,
-                a.TotalHours
+                a.TotalHours,
+                a.Status ?? "Present",
+                a.RequestedCheckIn,
+                a.RequestedCheckOut,
+                a.CorrectionReason
             ))
             .ToListAsync(cancellationToken);
     }

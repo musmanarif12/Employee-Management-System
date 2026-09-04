@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import ManagerDashboard from "./pages/ManagerDashboard";
+import HRDashboard from "./pages/HRDashboard";
 
 function App() {
   const token = sessionStorage.getItem("token");
@@ -26,6 +27,10 @@ function App() {
 
   if (role === "Employee" || role === "5") {
     return <EmployeeDashboard />;
+  }
+ // 3. Roles bases rendering (DB IDs: 3 = HR)
+  if (role === "HR" || role === "3") {
+    return <HRDashboard />;
   }
 
   // Fallback agar role match na ho

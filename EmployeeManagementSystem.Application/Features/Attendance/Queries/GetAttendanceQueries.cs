@@ -11,7 +11,11 @@ public record AttendanceResponseDto(
     string Date,
     DateTime CheckInTime,
     DateTime CheckOutTime,
-    decimal TotalHours
+    decimal TotalHours,
+    string Status,
+    DateTime? RequestedCheckIn,
+    DateTime? RequestedCheckOut,
+    string? CorrectionReason
 );
 
 public record GetAllAttendanceForHrQuery(
