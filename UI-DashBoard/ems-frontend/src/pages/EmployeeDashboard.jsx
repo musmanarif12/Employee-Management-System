@@ -69,7 +69,11 @@ function EmployeeDashboard() {
         reason: reason,
       };
 
-      await axios.post(`${API_BASE}/Attendance/request-correction`, payload, getHeader());
+      await axios.post(
+        `${API_BASE}/Attendance/request-correction`,
+        payload,
+        getHeader()
+      );
       setSubmitMsg("Correction request submitted successfully!");
       setSelectedAttendanceId(null);
       fetchData("attendance", "/Attendance/my-history");
@@ -100,12 +104,18 @@ function EmployeeDashboard() {
 
   const checkIsPending = (att) => {
     if (!att) return false;
-    const rawStatus = String(att.status || att.correctionStatus || "").toLowerCase();
-    
-    if (rawStatus.includes("approved") || rawStatus.includes("updated") || rawStatus.includes("rejected")) {
+    const rawStatus = String(
+      att.status || att.correctionStatus || ""
+    ).toLowerCase();
+
+    if (
+      rawStatus.includes("approved") ||
+      rawStatus.includes("updated") ||
+      rawStatus.includes("rejected")
+    ) {
       return false;
     }
-
+    
     return (
       rawStatus.includes("correction requested") ||
       rawStatus.includes("pending") ||
@@ -115,11 +125,21 @@ function EmployeeDashboard() {
   };
 
   const renderStatusBadge = (att) => {
-    const rawStatus = String(att.status || att.correctionStatus || "").toLowerCase();
+    const rawStatus = String(
+      att.status || att.correctionStatus || ""
+    ).toLowerCase();
 
     if (rawStatus.includes("approved") || rawStatus.includes("updated")) {
       return (
-        <span style={{ backgroundColor: "#28a745", color: "#fff", padding: "4px 8px", borderRadius: "4px", fontWeight: "bold" }}>
+        <span
+          style={{
+            backgroundColor: "#28a745",
+            color: "#fff",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontWeight: "bold",
+          }}
+        >
           Approved
         </span>
       );
@@ -127,7 +147,15 @@ function EmployeeDashboard() {
 
     if (rawStatus.includes("rejected")) {
       return (
-        <span style={{ backgroundColor: "#dc3545", color: "#fff", padding: "4px 8px", borderRadius: "4px", fontWeight: "bold" }}>
+        <span
+          style={{
+            backgroundColor: "#dc3545",
+            color: "#fff",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontWeight: "bold",
+          }}
+        >
           Rejected
         </span>
       );
@@ -135,19 +163,42 @@ function EmployeeDashboard() {
 
     if (checkIsPending(att)) {
       return (
-        <span style={{ backgroundColor: "#ffc107", color: "#000", padding: "4px 8px", borderRadius: "4px", fontWeight: "bold" }}>
+        <span
+          style={{
+            backgroundColor: "#ffc107",
+            color: "#000",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontWeight: "bold",
+          }}
+        >
           Pending
         </span>
       );
     }
 
-    return <span style={{ fontWeight: "bold" }}>{att.status || "Present"}</span>;
+    return (
+      <span style={{ fontWeight: "bold" }}>{att.status || "Present"}</span>
+    );
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "N/A";
+    const dateObj = new Date(timeStr);
+    return isNaN(dateObj.getTime()) ? "N/A" : dateObj.toLocaleTimeString();
   };
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
         <h1 style={{ margin: 0 }}>Employee Dashboard</h1>
         <button
           onClick={handleLogout}
@@ -158,7 +209,7 @@ function EmployeeDashboard() {
             color: "#fff",
             border: "none",
             borderRadius: "4px",
-            fontWeight: "bold"
+            fontWeight: "bold",
           }}
         >
           Logout
@@ -166,20 +217,32 @@ function EmployeeDashboard() {
       </div>
 
       {view === "home" ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "300px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            maxWidth: "300px",
+          }}
+        >
           <button onClick={() => fetchData("profile", "/Employees/me/profile")}>
             Check Personal Information
           </button>
           <button onClick={() => fetchData("leaves", "/Leaves/my-leaves")}>
             Check Leave Requests
           </button>
-          <button onClick={() => fetchData("attendance", "/Attendance/my-history")}>
+          <button
+            onClick={() => fetchData("attendance", "/Attendance/my-history")}
+          >
             Check Attendance Record
           </button>
         </div>
       ) : (
         <div>
-          <button onClick={() => setView("home")} style={{ marginBottom: "15px", cursor: "pointer" }}>
+          <button
+            onClick={() => setView("home")}
+            style={{ marginBottom: "15px", cursor: "pointer" }}
+          >
             &larr; Back
           </button>
 
@@ -192,9 +255,15 @@ function EmployeeDashboard() {
               {view === "profile" && (
                 <div>
                   <h2>Personal Information</h2>
-                  <p><b>Name:</b> {data.fullName || data.name}</p>
-                  <p><b>Email:</b> {data.email}</p>
-                  <p><b>Role:</b> {data.role}</p>
+                  <p>
+                    <b>Name:</b> {data.fullName || data.name}
+                  </p>
+                  <p>
+                    <b>Email:</b> {data.email}
+                  </p>
+                  <p>
+                    <b>Role:</b> {data.role}
+                  </p>
                 </div>
               )}
 
@@ -202,12 +271,24 @@ function EmployeeDashboard() {
               {view === "leaves" && (
                 <div>
                   <h2>My Leave Requests</h2>
-                  {submitMsg && <p style={{ color: "green", fontWeight: "bold" }}>{submitMsg}</p>}
+                  {submitMsg && (
+                    <p style={{ color: "green", fontWeight: "bold" }}>
+                      {submitMsg}
+                    </p>
+                  )}
 
                   {data.length === 0 ? (
                     <p>No leave requests found.</p>
                   ) : (
-                    <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%", marginBottom: "20px" }}>
+                    <table
+                      border="1"
+                      cellPadding="8"
+                      style={{
+                        borderCollapse: "collapse",
+                        width: "100%",
+                        marginBottom: "20px",
+                      }}
+                    >
                       <thead>
                         <tr style={{ backgroundColor: "#f2f2f2" }}>
                           <th>Leave Type</th>
@@ -221,7 +302,9 @@ function EmployeeDashboard() {
                         {data.map((leave, i) => (
                           <tr key={i}>
                             <td>{leave.leaveType || leave.type || "N/A"}</td>
-                            <td>{leave.fromDate || leave.leaveDate || "N/A"}</td>
+                            <td>
+                              {leave.fromDate || leave.leaveDate || "N/A"}
+                            </td>
                             <td>{leave.toDate || "N/A"}</td>
                             <td>{leave.status}</td>
                             <td>{leave.reason}</td>
@@ -233,20 +316,40 @@ function EmployeeDashboard() {
 
                   {/* Apply Leave Button & Form Under Table */}
                   <div style={{ marginTop: "15px" }}>
-                    <button 
+                    <button
                       onClick={() => setShowLeaveForm(!showLeaveForm)}
-                      style={{ padding: "8px 16px", cursor: "pointer", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "4px" }}
+                      style={{
+                        padding: "8px 16px",
+                        cursor: "pointer",
+                        backgroundColor: "#007bff",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                      }}
                     >
                       {showLeaveForm ? "Cancel Leave Form" : "Apply for Leave"}
                     </button>
 
                     {showLeaveForm && (
-                      <div style={{ backgroundColor: "#f8f9fa", padding: "15px", border: "1px solid #ccc", borderRadius: "5px", marginTop: "15px", maxWidth: "400px" }}>
+                      <div
+                        style={{
+                          backgroundColor: "#f8f9fa",
+                          padding: "15px",
+                          border: "1px solid #ccc",
+                          borderRadius: "5px",
+                          marginTop: "15px",
+                          maxWidth: "400px",
+                        }}
+                      >
                         <h3>Apply New Leave</h3>
                         <form onSubmit={handleLeaveSubmit}>
                           <div>
                             <label>Leave Type: </label>
-                            <select value={leaveType} onChange={(e) => setLeaveType(e.target.value)} style={{ width: "100%", padding: "5px" }}>
+                            <select
+                              value={leaveType}
+                              onChange={(e) => setLeaveType(e.target.value)}
+                              style={{ width: "100%", padding: "5px" }}
+                            >
                               <option value="Casual">Casual</option>
                               <option value="Sick">Sick</option>
                               <option value="Annual">Annual</option>
@@ -255,20 +358,49 @@ function EmployeeDashboard() {
                           <br />
                           <div>
                             <label>From Date: </label>
-                            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} required style={{ width: "100%", padding: "5px" }} />
+                            <input
+                              type="date"
+                              value={fromDate}
+                              onChange={(e) => setFromDate(e.target.value)}
+                              required
+                              style={{ width: "100%", padding: "5px" }}
+                            />
                           </div>
                           <br />
                           <div>
                             <label>To Date: </label>
-                            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} required style={{ width: "100%", padding: "5px" }} />
+                            <input
+                              type="date"
+                              value={toDate}
+                              onChange={(e) => setToDate(e.target.value)}
+                              required
+                              style={{ width: "100%", padding: "5px" }}
+                            />
                           </div>
                           <br />
                           <div>
                             <label>Reason: </label>
-                            <input type="text" value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} required placeholder="Reason for leave" style={{ width: "100%", padding: "5px" }} />
+                            <input
+                              type="text"
+                              value={leaveReason}
+                              onChange={(e) => setLeaveReason(e.target.value)}
+                              required
+                              placeholder="Reason for leave"
+                              style={{ width: "100%", padding: "5px" }}
+                            />
                           </div>
                           <br />
-                          <button type="submit" style={{ padding: "8px 16px", backgroundColor: "#28a745", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                          <button
+                            type="submit"
+                            style={{
+                              padding: "8px 16px",
+                              backgroundColor: "#28a745",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "pointer",
+                            }}
+                          >
                             Submit Leave Request
                           </button>
                         </form>
@@ -282,16 +414,26 @@ function EmployeeDashboard() {
               {view === "attendance" && (
                 <div>
                   <h2>Attendance Record</h2>
-                  {submitMsg && <p style={{ color: "green", fontWeight: "bold" }}>{submitMsg}</p>}
+                  {submitMsg && (
+                    <p style={{ color: "green", fontWeight: "bold" }}>
+                      {submitMsg}
+                    </p>
+                  )}
                   {data.length === 0 ? (
                     <p>No attendance records found.</p>
                   ) : (
-                    <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
+                    <table
+                      border="1"
+                      cellPadding="8"
+                      style={{ borderCollapse: "collapse", width: "100%" }}
+                    >
                       <thead>
                         <tr style={{ backgroundColor: "#f2f2f2" }}>
                           <th>Date</th>
-                          <th>Check In</th>
-                          <th>Check Out</th>
+                          <th>Old Check In</th>
+                          <th>Old Check Out</th>
+                          <th>Requested Check In</th>
+                          <th>Requested Check Out</th>
                           <th>Status</th>
                           <th>Action</th>
                         </tr>
@@ -303,21 +445,42 @@ function EmployeeDashboard() {
                           return (
                             <React.Fragment key={att.id || i}>
                               <tr>
-                                <td>{att.date ? att.date.split("T")[0] : "N/A"}</td>
-                                <td>{att.checkInTime ? new Date(att.checkInTime).toLocaleTimeString() : "N/A"}</td>
-                                <td>{att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString() : "N/A"}</td>
-                                
+                                <td>
+                                  {att.date ? att.date.split("T")[0] : "N/A"}
+                                </td>
+                                <td>{formatTime(att.checkInTime)}</td>
+                                <td>{formatTime(att.checkOutTime)}</td>
+                                <td>
+                                  {att.requestedCheckIn
+                                    ? formatTime(att.requestedCheckIn)
+                                    : "N/A"}
+                                </td>
+                                <td>
+                                  {att.requestedCheckOut
+                                    ? formatTime(att.requestedCheckOut)
+                                    : "N/A"}
+                                </td>
                                 <td>{renderStatusBadge(att)}</td>
-
                                 <td>
                                   {isPending ? (
-                                    <span style={{ color: "#856404", fontSize: "13px", fontWeight: "bold" }}>
+                                    <span
+                                      style={{
+                                        color: "#856404",
+                                        fontSize: "13px",
+                                        fontWeight: "bold",
+                                      }}
+                                    >
                                       Request Pending
                                     </span>
                                   ) : (
-                                    <button 
-                                      onClick={() => handleOpenCorrectionForm(att)}
-                                      style={{ padding: "4px 8px", cursor: "pointer" }}
+                                    <button
+                                      onClick={() =>
+                                        handleOpenCorrectionForm(att)
+                                      }
+                                      style={{
+                                        padding: "4px 8px",
+                                        cursor: "pointer",
+                                      }}
                                     >
                                       Request Correction
                                     </button>
@@ -328,15 +491,24 @@ function EmployeeDashboard() {
                               {/* Form row inside Table */}
                               {selectedAttendanceId === att.id && (
                                 <tr>
-                                  <td colSpan="5" style={{ backgroundColor: "#f8f9fa" }}>
-                                    <form onSubmit={(e) => handleCorrectionSubmit(e, att.id)}>
+                                  <td
+                                    colSpan="7"
+                                    style={{ backgroundColor: "#f8f9fa" }}
+                                  >
+                                    <form
+                                      onSubmit={(e) =>
+                                        handleCorrectionSubmit(e, att.id)
+                                      }
+                                    >
                                       <h4>Request Correction</h4>
                                       <div>
                                         <label>Requested Check In: </label>
                                         <input
                                           type="datetime-local"
                                           value={reqCheckIn}
-                                          onChange={(e) => setReqCheckIn(e.target.value)}
+                                          onChange={(e) =>
+                                            setReqCheckIn(e.target.value)
+                                          }
                                           required
                                         />
                                       </div>
@@ -346,7 +518,9 @@ function EmployeeDashboard() {
                                         <input
                                           type="datetime-local"
                                           value={reqCheckOut}
-                                          onChange={(e) => setReqCheckOut(e.target.value)}
+                                          onChange={(e) =>
+                                            setReqCheckOut(e.target.value)
+                                          }
                                           required
                                         />
                                       </div>
@@ -356,14 +530,24 @@ function EmployeeDashboard() {
                                         <input
                                           type="text"
                                           value={reason}
-                                          onChange={(e) => setReason(e.target.value)}
+                                          onChange={(e) =>
+                                            setReason(e.target.value)
+                                          }
                                           placeholder="Reason for correction"
                                           required
                                         />
                                       </div>
                                       <br />
-                                      <button type="submit">Submit Request</button>
-                                      <button type="button" onClick={() => setSelectedAttendanceId(null)} style={{ marginLeft: "5px" }}>
+                                      <button type="submit">
+                                        Submit Request
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setSelectedAttendanceId(null)
+                                        }
+                                        style={{ marginLeft: "5px" }}
+                                      >
                                         Cancel
                                       </button>
                                     </form>
